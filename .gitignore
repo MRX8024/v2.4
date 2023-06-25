@@ -1,0 +1,17 @@
+printer-*.cfg
+.fluidd*
+.variables.stb
+*.swp
+imgs/*
+input_shaper/*
+*.bak
+
+
+
+
+
+
+
+
+
+
