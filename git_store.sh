@@ -1,5 +1,5 @@
 #/usr/bin/env bash
-cd /home/mrx/printer_data/config
+cd ~/printer_data/config
 TODAY=$(date)
 git add .
 git commit -m "$TODAY"
