@@ -1,0 +1,13 @@
+[crowsnest]
+log_path: ~/printer_data/logs/crowsnest.log
+log_level: verbose                      # Valid Options are quiet/verbose/debug
+delete_log: false                      
+
+[cam 1]
+mode: mjpg                              # mjpg/rtsp
+port: 8080                            
+device: /dev/video0                 
+resolution: 1920x1080                  
+max_fps: 30                           
+#custom_flags:                          # You can run the Stream Services with custom flags.
+#v4l2ctl:                               # Add v4l2-ctl parameters to setup your camera, see Log what your cam is capable of.
