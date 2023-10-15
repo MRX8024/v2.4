@@ -41,9 +41,19 @@ STORE_RESULTS=0 # Number of results to keep (older files are automatically clean
 ################ !!! DO NOT EDIT BELOW THIS LINE !!! ################
 #####################################################################
 
+function plot_ratio_graph {
+  local generator filename newfilename date axis
+  analizer="${SCRIPTS_FOLDER}/damp_ratio.py"
+  
+  python3 "${analizer}" "${isf}"/inputshaper/resonances_x_*.csv
+  python3 "${analizer}" "${isf}"/inputshaper/resonances_y_*.csv
+  print done
+}
+
 function plot_shaper_graph {
   local generator filename newfilename date axis
   generator="${KLIPPER_FOLDER}/scripts/calibrate_shaper.py"
+  analizer="${SCRIPTS_FOLDER}/damp_ratio.py"
   
   while read filename; do
     newfilename="$(echo ${filename} | sed -e "s/\\/tmp\///")"
@@ -53,6 +63,13 @@ function plot_shaper_graph {
     
     sync && sleep 2
     "${generator}" "${isf}"/inputshaper/"${newfilename}" -o "${isf}"/inputshaper/resonances_"${axis}"_"${date}".png
+    python3 "${analizer}" "${isf}"/inputshaper/"${newfilename}"
+    
+    # dr="$(Rscript ~/ResHelper/Y.R)";
+    # dr=${dr#"[1] "};
+    # echo "Damping ratio for Y calculated:\ndamping_ratio_y: $dr\n ";
+    # name="$name-dr_$dr-v$(date "+%Y%m%d_%H%M").png";
+    
   done <<< "$(find /tmp -type f -name "resonances_*.csv" 2>&1 | grep -v "Permission")"
 }
 
