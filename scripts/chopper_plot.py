@@ -37,7 +37,14 @@ def calculate_static_measures(file_path, trim_percentage=0.2):
 def main():
     args = parse_arguments()
     directory_path = '/tmp'
-    csv_files = sorted([f for f in os.listdir(directory_path) if f.startswith('adxl') and f.endswith('.csv') and f != 'adxl345-stand_still.csv'])
+    csv_files, target_file = [], ""
+    for f in os.listdir(directory_path):
+        if f.endswith(".csv"):
+            if f.endswith('-stand_still.csv'):
+                target_file = f
+            else:
+                csv_files.append(f)
+    csv_files = sorted(csv_files)
     parameters_list = []
     
     for current in range(args.current_min, args.current_max + 1):
@@ -57,7 +64,7 @@ def main():
         return
 
     results = []
-    static_median_x, static_median_y, static_median_z = calculate_static_measures(os.path.join(directory_path, 'adxl345-stand_still.csv'))
+    static_median_x, static_median_y, static_median_z = calculate_static_measures(os.path.join(directory_path, target_file))
 
     for csv_file, parameters in tqdm(zip(csv_files, parameters_list), desc='Processing CSV files', total=len(csv_files)):
         file_path = os.path.join(directory_path, csv_file)
@@ -73,7 +80,7 @@ def main():
         results.append({'file_name': csv_file, 'median_magnitude': median_magnitude, 'parameters': parameters, 'toff': current_toff})
 
     results_df = pd.DataFrame(results)
-    results_csv_path = '/tmp/median_magnitudes.csv'
+    results_csv_path = os.path.join(directory_path,'median_magnitudes.csv')
     results_df.to_csv(results_csv_path, index=False)
 
     grouped_results = results_df.groupby('parameters')['median_magnitude'].mean().reset_index()
@@ -83,7 +90,7 @@ def main():
     # Add a 'toff' column based on the 'parameters' column
     grouped_results['toff'] = grouped_results['parameters'].apply(lambda x: int(x.split('_')[2].split('=')[1]))
 
-    grouped_results_csv_path = '/tmp/grouped_median_magnitudes.csv'
+    grouped_results_csv_path = os.path.join(directory_path,'grouped_median_magnitudes.csv')
     grouped_results.to_csv(grouped_results_csv_path, index=False)
 
     print(f'Saved grouped results to: {grouped_results_csv_path}')
@@ -95,7 +102,7 @@ def main():
                  color_continuous_scale=toff_colors)
     fig.update_layout(xaxis_title='Median Magnitude', yaxis_title='Parameters')
     fig.update_layout(coloraxis_showscale=False)
-    plot_html_path = '/tmp/interactive_plot.html'
+    plot_html_path = os.path.join(directory_path,'interactive_plot.html')
     pyo.plot(fig, filename=plot_html_path, auto_open=False)
 
     print(f'Access the interactive plot at: {plot_html_path}')
