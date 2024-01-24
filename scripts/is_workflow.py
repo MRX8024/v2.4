@@ -35,8 +35,6 @@ import tarfile
 from datetime import datetime
 
 #################################################################################################################
-# RESULTS_FOLDER = 'C:/Users/nikit/Desktop/PycharmProjects/Shaper_graphs'
-# KLIPPER_FOLDER = 'C:/Users/nikit/Desktop/PycharmProjects/Shaper_graphs/klipper'
 RESULTS_FOLDER = os.path.expanduser('~/printer_data/config/adxl_results')
 KLIPPER_FOLDER = os.path.expanduser('~/klipper')
 STORE_RESULTS = 0
@@ -110,13 +108,16 @@ def get_shaper_graph():
         time.sleep(3)
 
     # Extract the tested axis from the filename and rename/move the CSV file to the result folder
-    axis = os.path.basename(filename).split('_')[3].split('.')[0].upper()
-    new_file = os.path.join(RESULTS_FOLDER, RESULTS_SUBFOLDERS[1], f'resonances_{current_date}_{axis}.csv')
+    axis = os.path.basename(filename).split('_')[2]
+    accelerometer = os.path.basename(filename).split('_')[3]
+    if accelerometer == 'idm':
+        accelerometer =  accelerometer + '_accel'
+    new_file = os.path.join(RESULTS_FOLDER, RESULTS_SUBFOLDERS[1], f'resonances_{axis}_{current_date}_{accelerometer}.csv')
     shutil.move(filename, new_file)
     
     # Generate the shaper graph and its name
     fig = shaper_calibration([new_file], KLIPPER_FOLDER)
-    png_filename = os.path.join(RESULTS_FOLDER, RESULTS_SUBFOLDERS[1], f'resonances_{current_date}_{axis}.png')
+    png_filename = os.path.join(RESULTS_FOLDER, RESULTS_SUBFOLDERS[1], f'resonances_{axis}_{current_date}_{accelerometer}.png')
     
     return fig, png_filename
 

@@ -324,7 +324,7 @@ def setup_klipper_import(kdir):
     shaper_calibrate = importlib.import_module('.shaper_calibrate', 'extras')
 
 
-def shaper_calibration(lognames, klipperdir="~/klipper", max_smoothing=None, max_freq=250):
+def shaper_calibration(lognames, klipperdir="~/klipper", max_smoothing=None, max_freq=200):
     setup_klipper_import(klipperdir)
 
     # Parse data
@@ -340,13 +340,8 @@ def shaper_calibration(lognames, klipperdir="~/klipper", max_smoothing=None, max
     # Add title
     # title_line1 = "INPUT SHAPER CALIBRATION TOOL"
     # fig.text(0.12, 0.965, title_line1, ha='left', va='bottom', fontsize=20, color=COLORS['purple'], weight='bold')
-    try:
-        filename_parts = (lognames[0].split('/')[-1]).split('_')
-        dt = datetime.strptime(f"{filename_parts[1]} {filename_parts[2]}", "%Y%m%d %H%M%S")
-        title_line2 = dt.strftime('%x %X') + ' -- ' + filename_parts[3].upper().split('.')[0] + ' axis'
-    except:
-        print("Warning: CSV filename look to be different than expected (%s)" % (lognames[0]))
-        title_line2 = "Frequency response and shapers (%s)" % (lognames[0].split('/')[-1])
+
+    title_line2 = "Frequency response and shapers (%s)" % (lognames[0])
 
     ax1.set_title("\n".join(wrap(title_line2, MAX_TITLE_LENGTH)))
     # fig.text(0.12, 0.957, title_line2, ha='left', va='top', fontsize=10, color=COLORS['black'])
@@ -373,7 +368,8 @@ def main():
     opts = optparse.OptionParser(usage)
     opts.add_option("-o", "--output", type="string", dest="output",
                     default=None, help="filename of output graph")
-    opts.add_option("-f", "--max_freq", type="float", default=200.,
+    opts.add_option("-f", "--max_freq", type="float", default=200.
+                    ,
                     help="maximum frequency to graph")
     opts.add_option("-s", "--max_smoothing", type="float", default=None,
                     help="maximum shaper smoothing to allow")
