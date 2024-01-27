@@ -1,4 +1,25 @@
+#!/usr/bin/env python3
+####################################
+###### CHOPPER REGISTERS TUNE ######
+####################################
+# Written by @altzbox @mrx8024 #
+# @version: 1.1
+
+# CHANGELOG:
+#   v1.0: first version of the script, basic functionality.
+#   v1.1: add support any accelerometers, auto-import parameters, mkdir, export to home dir,
+
+
+
 import os
+#################################################################################################################
+RESULTS_FOLDER = 'Z:/Chopper-tuning-guide/pythonProject/adxl_results/registers'
+DATA_FOLDER = 'Z:/Chopper-tuning-guide/pythonProject'
+# RESULTS_FOLDER = os.path.expanduser('~/printer_data/config/adxl_results/registers')
+# DATA_FOLDER = '/tmp'
+#################################################################################################################
+
+import sys
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -6,24 +27,35 @@ import argparse
 import plotly.express as px
 import plotly.offline as pyo
 from natsort import natsorted
+from datetime import datetime
+
+def cleaner():
+    os.system('rm -f /tmp/*.csv')
+    sys.exit(0)
+
+if __name__ == "__main__":
+    if sys.argv[1] == 'cleaner':
+        cleaner()
+
+print('Magnitude graphs generation...')
+
+def check_export_path(path):
+    if not os.path.exists(path):
+        try:
+            os.makedirs(path)
+        except OSError as e:
+            print(f"Error generate path {path}: {e}")
+
+if __name__ == "__main__":
+    check_export_path(RESULTS_FOLDER)
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description='Process CSV files and calculate median magnitudes.')
-    parser.add_argument('--current_min', type=int, required=True, help='Minimum value for current')
-    parser.add_argument('--current_max', type=int, required=True, help='Maximum value for current')
-    parser.add_argument('--tbl_min', type=int, required=True, help='Minimum value for tbl')
-    parser.add_argument('--tbl_max', type=int, required=True, help='Maximum value for tbl')
-    parser.add_argument('--toff_min', type=int, required=True, help='Minimum value for toff')
-    parser.add_argument('--toff_max', type=int, required=True, help='Maximum value for toff')
-    parser.add_argument('--hstrt_hend_max', type=int, required=True, help='Maximum value for hstrt_hend_max')
-    parser.add_argument('--min_hstrt', type=int, required=True, help='Minimum value for min_hstrt')
-    parser.add_argument('--max_hstrt', type=int, required=True, help='Maximum value for max_hstrt')
-    parser.add_argument('--min_hend', type=int, required=True, help='Minimum value for min_hend')
-    parser.add_argument('--max_hend', type=int, required=True, help='Maximum value for max_hend')
-    parser.add_argument('--min_speed', type=int, required=True, help='Minimum value for speed')
-    parser.add_argument('--max_speed', type=int, required=True, help='Maximum value for speed')
-    parser.add_argument('--iterations', type=int, default=1, help='Number of iterations for speed cycle')
-    return parser.parse_args()
+    args = sys.argv[1:]
+    parsed_args = {}
+    for arg in args:
+        name, value = arg.split('=')
+        parsed_args[name] = int(value) if value.isdigit() else value
+    return parsed_args
 
 def calculate_static_measures(file_path, trim_percentage=0.2):
     data = pd.read_csv(file_path, delimiter=',')
@@ -36,9 +68,9 @@ def calculate_static_measures(file_path, trim_percentage=0.2):
 
 def main():
     args = parse_arguments()
-    directory_path = '/tmp'
+    current_date = datetime.now().strftime('%Y%m%d_%H%M%S')
     csv_files, target_file = [], ""
-    for f in os.listdir(directory_path):
+    for f in os.listdir(DATA_FOLDER):
         if f.endswith(".csv"):
             if f.endswith('-stand_still.csv'):
                 target_file = f
@@ -47,14 +79,14 @@ def main():
     csv_files = sorted(csv_files)
     parameters_list = []
     
-    for current in range(args.current_min, args.current_max + 1):
-        for tbl in range(args.tbl_min, args.tbl_max + 1):
-            for toff in range(args.toff_min, args.toff_max + 1):
-                for hstrt in range(args.min_hstrt, args.max_hstrt + 1):
-                    for hend in range(args.min_hend, args.max_hend + 1):
-                        if hstrt + hend <= args.hstrt_hend_max:
-                            for speed in range(args.min_speed, args.max_speed + 1):
-                                for _ in range(args.iterations):
+    for current in range(args.get('current_min_ma'), args.get('current_max_ma') + 1):
+        for tbl in range(args.get('tbl_min'), args.get('tbl_max') + 1):
+            for toff in range(args.get('toff_min'), args.get('toff_max') + 1):
+                for hstrt in range(args.get('min_hstrt'), args.get('max_hstrt') + 1):
+                    for hend in range(args.get('min_hend'), args.get('max_hend') + 1):
+                        if hstrt + hend <= args.get('hstrt_hend_max'):
+                            for speed in range(args.get('min_speed'), args.get('max_speed') + 1):
+                                for _ in range(args.get('iterations')):
                                     parameters = f"current={current}_tbl={tbl}_toff={toff}_hstrt={hstrt}_hend={hend}_speed={speed}"
                                     parameters_list.append(parameters)
 
@@ -64,10 +96,10 @@ def main():
         return
 
     results = []
-    static_median_x, static_median_y, static_median_z = calculate_static_measures(os.path.join(directory_path, target_file))
+    static_median_x, static_median_y, static_median_z = calculate_static_measures(os.path.join(DATA_FOLDER, target_file))
 
     for csv_file, parameters in tqdm(zip(csv_files, parameters_list), desc='Processing CSV files', total=len(csv_files)):
-        file_path = os.path.join(directory_path, csv_file)
+        file_path = os.path.join(DATA_FOLDER, csv_file)
         data = pd.read_csv(file_path, delimiter=',')
         data['accel_x'] -= static_median_x
         data['accel_y'] -= static_median_y
@@ -80,7 +112,7 @@ def main():
         results.append({'file_name': csv_file, 'median_magnitude': median_magnitude, 'parameters': parameters, 'toff': current_toff})
 
     results_df = pd.DataFrame(results)
-    results_csv_path = os.path.join(directory_path,'median_magnitudes.csv')
+    results_csv_path = os.path.join(RESULTS_FOLDER,f'median_magnitudes_{current_date}.csv')
     results_df.to_csv(results_csv_path, index=False)
 
     grouped_results = results_df.groupby('parameters')['median_magnitude'].mean().reset_index()
@@ -90,7 +122,7 @@ def main():
     # Add a 'toff' column based on the 'parameters' column
     grouped_results['toff'] = grouped_results['parameters'].apply(lambda x: int(x.split('_')[2].split('=')[1]))
 
-    grouped_results_csv_path = os.path.join(directory_path,'grouped_median_magnitudes.csv')
+    grouped_results_csv_path = os.path.join(RESULTS_FOLDER,f'grouped_median_magnitudes_{current_date}.csv')
     grouped_results.to_csv(grouped_results_csv_path, index=False)
 
     print(f'Saved grouped results to: {grouped_results_csv_path}')
@@ -102,7 +134,7 @@ def main():
                  color_continuous_scale=toff_colors)
     fig.update_layout(xaxis_title='Median Magnitude', yaxis_title='Parameters')
     fig.update_layout(coloraxis_showscale=False)
-    plot_html_path = os.path.join(directory_path,'interactive_plot.html')
+    plot_html_path = os.path.join(RESULTS_FOLDER,f'interactive_plot_{current_date}.html')
     pyo.plot(fig, filename=plot_html_path, auto_open=False)
 
     print(f'Access the interactive plot at: {plot_html_path}')

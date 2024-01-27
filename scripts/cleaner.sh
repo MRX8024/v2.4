@@ -1,2 +1,2 @@
 #!/bin/bash
-rm /tmp/*.csv
+rm -f /tmp/*.csv
