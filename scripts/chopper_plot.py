@@ -6,10 +6,11 @@
 # @version: 1.1
 
 # CHANGELOG:
-#   v1.0: first version of the script, basic functionality.
-#   v1.1: add support any accelerometers, auto-import parameters, mkdir, export to home dir,
+#   v1.0: first version of the script, data cort, collection, graph generation
+#   v1.1: add support any accelerometers, smart work area, auto-install, auto-import parameters, mkdirs,
+#   export to home dirs, out nametags, drivers, curr, acc detect, find vibr mode, cleaner data,
 
-
+# These changes describe the operation of the entire system, not a specific file.
 
 import os
 #################################################################################################################
@@ -68,6 +69,9 @@ def calculate_static_measures(file_path, trim_percentage=0.2):
 
 def main():
     args = parse_arguments()
+    accelerometer = args.get('accel_chip')
+    driver = args.get('driver')
+    sense_resistor = args.get('sense_resistor')
     current_date = datetime.now().strftime('%Y%m%d_%H%M%S')
     csv_files, target_file = [], ""
     for f in os.listdir(DATA_FOLDER):
@@ -79,7 +83,7 @@ def main():
     csv_files = sorted(csv_files)
     parameters_list = []
     
-    for current in range(args.get('current_min_ma'), args.get('current_max_ma') + 1):
+    for current in range(args.get('current_min_ma'), args.get('current_max_ma') + 1, 10):
         for tbl in range(args.get('tbl_min'), args.get('tbl_max') + 1):
             for toff in range(args.get('toff_min'), args.get('toff_max') + 1):
                 for hstrt in range(args.get('min_hstrt'), args.get('max_hstrt') + 1):
@@ -112,7 +116,7 @@ def main():
         results.append({'file_name': csv_file, 'median_magnitude': median_magnitude, 'parameters': parameters, 'toff': current_toff})
 
     results_df = pd.DataFrame(results)
-    results_csv_path = os.path.join(RESULTS_FOLDER,f'median_magnitudes_{current_date}.csv')
+    results_csv_path = os.path.join(RESULTS_FOLDER,f'median_magnitudes_{accelerometer}_tmc{driver}_{sense_resistor}_{current_date}.csv')
     results_df.to_csv(results_csv_path, index=False)
 
     grouped_results = results_df.groupby('parameters')['median_magnitude'].mean().reset_index()
@@ -122,7 +126,7 @@ def main():
     # Add a 'toff' column based on the 'parameters' column
     grouped_results['toff'] = grouped_results['parameters'].apply(lambda x: int(x.split('_')[2].split('=')[1]))
 
-    grouped_results_csv_path = os.path.join(RESULTS_FOLDER,f'grouped_median_magnitudes_{current_date}.csv')
+    grouped_results_csv_path = os.path.join(RESULTS_FOLDER,f'grouped_median_magnitudes_{accelerometer}_tmc{driver}_{sense_resistor}_{current_date}.csv')
     grouped_results.to_csv(grouped_results_csv_path, index=False)
 
     print(f'Saved grouped results to: {grouped_results_csv_path}')
@@ -134,7 +138,7 @@ def main():
                  color_continuous_scale=toff_colors)
     fig.update_layout(xaxis_title='Median Magnitude', yaxis_title='Parameters')
     fig.update_layout(coloraxis_showscale=False)
-    plot_html_path = os.path.join(RESULTS_FOLDER,f'interactive_plot_{current_date}.html')
+    plot_html_path = os.path.join(RESULTS_FOLDER,f'interactive_plot_{accelerometer}_tmc{driver}_{sense_resistor}_{current_date}.html')
     pyo.plot(fig, filename=plot_html_path, auto_open=False)
 
     print(f'Access the interactive plot at: {plot_html_path}')
