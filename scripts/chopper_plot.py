@@ -14,10 +14,8 @@
 
 import os
 #################################################################################################################
-RESULTS_FOLDER = 'Z:/Chopper-tuning-guide/pythonProject/adxl_results/registers'
-DATA_FOLDER = 'Z:/Chopper-tuning-guide/pythonProject'
-# RESULTS_FOLDER = os.path.expanduser('~/printer_data/config/adxl_results/registers')
-# DATA_FOLDER = '/tmp'
+RESULTS_FOLDER = os.path.expanduser('~/printer_data/config/adxl_results/chopper_magnitude')
+DATA_FOLDER = '/tmp'
 #################################################################################################################
 
 import sys
@@ -83,7 +81,7 @@ def main():
     csv_files = sorted(csv_files)
     parameters_list = []
     
-    for current in range(args.get('current_min_ma'), args.get('current_max_ma') + 1, 10):
+    for current in range(args.get('current_min_ma'), args.get('current_max_ma') + 1, args.get('current_ch_step')):
         for tbl in range(args.get('tbl_min'), args.get('tbl_max') + 1):
             for toff in range(args.get('toff_min'), args.get('toff_max') + 1):
                 for hstrt in range(args.get('min_hstrt'), args.get('max_hstrt') + 1):
