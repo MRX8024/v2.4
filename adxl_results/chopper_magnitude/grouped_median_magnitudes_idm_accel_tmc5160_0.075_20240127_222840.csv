@@ -1,7 +1,0 @@
-parameters,median_magnitude,toff
-current=2000_tbl=0_toff=2_hstrt=2_hend=2_speed=100,4868.80554680927,2
-current=2000_tbl=1_toff=2_hstrt=2_hend=2_speed=100,4301.241752061553,2
-current=2000_tbl=2_toff=2_hstrt=2_hend=2_speed=100,4112.52200952613,2
-current=2100_tbl=0_toff=2_hstrt=2_hend=2_speed=100,5963.0068918334455,2
-current=2100_tbl=1_toff=2_hstrt=2_hend=2_speed=100,5471.722533364155,2
-current=2100_tbl=2_toff=2_hstrt=2_hend=2_speed=100,4806.964308356609,2

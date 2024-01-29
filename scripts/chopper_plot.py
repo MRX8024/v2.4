@@ -6,14 +6,16 @@
 # @version: 1.1
 
 # CHANGELOG:
-#   v1.0: first version of the script, data cort, collection, graph generation
-#   v1.1: add support any accelerometers, smart work area, auto-install, auto-import parameters, mkdirs,
-#   export to home dirs, out nametags, drivers, curr, acc detect, find vibr mode, cleaner data,
+#   v1.0: first version of the script, data sort, collection, graph generation
+#   v1.1: add support any accelerometers, find vibr mode, smart work area, auto-install,
+#   auto-import export, out nametags(acc+drv+sr+date), cleaner data,
 
 # These changes describe the operation of the entire system, not a specific file.
 
 import os
 #################################################################################################################
+# RESULTS_FOLDER = 'Z:/Chopper-tuning-guide/pythonProject/adxl_results/chopper_magnitude'
+# DATA_FOLDER = 'Z:/Chopper-tuning-guide/pythonProject'
 RESULTS_FOLDER = os.path.expanduser('~/printer_data/config/adxl_results/chopper_magnitude')
 DATA_FOLDER = '/tmp'
 #################################################################################################################
@@ -69,7 +71,7 @@ def main():
     args = parse_arguments()
     accelerometer = args.get('accel_chip')
     driver = args.get('driver')
-    sense_resistor = args.get('sense_resistor')
+    sense_resistor = round(float(args.get('sense_resistor')), 3)
     current_date = datetime.now().strftime('%Y%m%d_%H%M%S')
     csv_files, target_file = [], ""
     for f in os.listdir(DATA_FOLDER):
@@ -81,7 +83,7 @@ def main():
     csv_files = sorted(csv_files)
     parameters_list = []
     
-    for current in range(args.get('current_min_ma'), args.get('current_max_ma') + 1, args.get('current_ch_step')):
+    for current in range(args.get('current_min_ma'), args.get('current_max_ma') + 1, args.get('current_change_step')):
         for tbl in range(args.get('tbl_min'), args.get('tbl_max') + 1):
             for toff in range(args.get('toff_min'), args.get('toff_max') + 1):
                 for hstrt in range(args.get('min_hstrt'), args.get('max_hstrt') + 1):
@@ -124,7 +126,7 @@ def main():
     # Add a 'toff' column based on the 'parameters' column
     grouped_results['toff'] = grouped_results['parameters'].apply(lambda x: int(x.split('_')[2].split('=')[1]))
 
-    grouped_results_csv_path = os.path.join(RESULTS_FOLDER,f'grouped_median_magnitudes_{accelerometer}_tmc{driver}_{sense_resistor}_{current_date}.csv')
+    grouped_results_csv_path = os.path.join(RESULTS_FOLDER,f'grouped_median_magnitudes_{accelerometer}_tmc{driver}_{sense_resistor})_{current_date}.csv')
     grouped_results.to_csv(grouped_results_csv_path, index=False)
 
     print(f'Saved grouped results to: {grouped_results_csv_path}')
