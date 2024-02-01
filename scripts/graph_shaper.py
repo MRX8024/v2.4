@@ -176,7 +176,7 @@ def plot_freq_response_with_damping(ax, calibration_data, shapers, performance_s
     ax.set_xlabel('Frequency (Hz)')
     ax.set_xlim([0, max_freq])
     ax.set_ylabel('Power spectral density')
-    ax.set_ylim([0, psd.max() + psd.max() * 0.05])
+    # ax.set_ylim([0, psd.max() + psd.max() * 0.05])
 
     ax.plot(freqs, psd, label='X+Y+Z', color='purple')
     ax.plot(freqs, px, label='X', color='red')
@@ -351,8 +351,8 @@ def shaper_calibration(lognames, klipperdir="~/klipper", max_smoothing=None, max
     # plot_spectrogram(ax2, datas[0], peaks, max_freq)
 
     fig.set_size_inches(8, 6)
-    fig.tight_layout()
-    fig.subplots_adjust(top=0.89)
+    # fig.tight_layout()
+    # fig.subplots_adjust(top=0.89)
 
     # Adding a small Klippain logo to the top left corner of the figure
     # ax_logo = fig.add_axes([0.001, 0.899, 0.1, 0.1], anchor='NW', zorder=-1)
