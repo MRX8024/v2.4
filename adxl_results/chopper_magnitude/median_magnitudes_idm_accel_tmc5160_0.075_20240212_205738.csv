@@ -1,0 +1,12 @@
+file_name,median_magnitude,parameters,toff
+idm_accel-20240212_205715.csv,5089.738246677465,current=2000_tbl=0_toff=4_hstrt=0_hend=13_speed=100,4
+idm_accel-20240212_205717.csv,7159.380352410257,current=2000_tbl=0_toff=4_hstrt=0_hend=13_speed=101,4
+idm_accel-20240212_205719.csv,5066.814044648687,current=2000_tbl=0_toff=4_hstrt=0_hend=13_speed=102,4
+idm_accel-20240212_205721.csv,6016.905525686415,current=2000_tbl=0_toff=4_hstrt=0_hend=13_speed=103,4
+idm_accel-20240212_205723.csv,4643.879813648953,current=2000_tbl=0_toff=4_hstrt=0_hend=13_speed=104,4
+idm_accel-20240212_205725.csv,5187.210252817658,current=2000_tbl=0_toff=4_hstrt=0_hend=13_speed=105,4
+idm_accel-20240212_205727.csv,4220.652083566494,current=2000_tbl=0_toff=4_hstrt=0_hend=13_speed=106,4
+idm_accel-20240212_205729.csv,4939.575033973551,current=2000_tbl=0_toff=4_hstrt=0_hend=13_speed=107,4
+idm_accel-20240212_205731.csv,4097.247883342869,current=2000_tbl=0_toff=4_hstrt=0_hend=13_speed=108,4
+idm_accel-20240212_205733.csv,4827.586915707663,current=2000_tbl=0_toff=4_hstrt=0_hend=13_speed=109,4
+idm_accel-20240212_205735.csv,4059.992834948846,current=2000_tbl=0_toff=4_hstrt=0_hend=13_speed=110,4
