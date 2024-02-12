@@ -1,7 +1,0 @@
-file_name,median_magnitude,parameters,toff
-idm_accel-20240212_205614.csv,2332.5570144362828,current=1000_tbl=0_toff=4_hstrt=0_hend=13_speed=50,4
-idm_accel-20240212_205616.csv,2379.8364506297785,current=1000_tbl=0_toff=4_hstrt=0_hend=13_speed=51,4
-idm_accel-20240212_205618.csv,2488.0628440347164,current=1000_tbl=0_toff=4_hstrt=0_hend=13_speed=52,4
-idm_accel-20240212_205620.csv,2660.200453098836,current=1000_tbl=0_toff=4_hstrt=0_hend=13_speed=53,4
-idm_accel-20240212_205622.csv,2797.355958023333,current=1000_tbl=0_toff=4_hstrt=0_hend=13_speed=54,4
-idm_accel-20240212_205624.csv,2829.188704337084,current=1000_tbl=0_toff=4_hstrt=0_hend=13_speed=55,4
