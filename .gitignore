@@ -6,12 +6,4 @@ imgs/*
 input_shaper/*
 *.bak
 *.bkp
-
-
-
-
-
-
-
-
-
+*.csv

@@ -1,1 +1,2 @@
 telegram.conf filter=ChatTokenFilter
+*.html linguist-detectable=false
