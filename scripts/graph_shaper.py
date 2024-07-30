@@ -1,42 +1,15 @@
 #!/usr/bin/env python3
-
-#################################################
-######## INPUT SHAPER CALIBRATION SCRIPT ########
-#################################################
-# Derived from the calibrate_shaper.py official Klipper script
-# Copyright (C) 2020  Dmitry Butyugin <dmbutyugin@google.com>
-# Copyright (C) 2020  Kevin O'Connor <kevin@koconnor.net>
-#
-# Written by Frix_x#0161 #
-# @version: 2.0
-
-# CHANGELOG:
-#   v2.0: updated the script to align it to the new K-Shake&Tune module
-#   v1.1: - improved the damping ratio computation with linear approximation for more precision
-#         - reworked the top graph to add more information to it with colored zones,
-#           automated peak detection, etc...
-#         - added a full spectrogram of the signal on the bottom to allow deeper analysis
-#   v1.0: first version of this script inspired from the official Klipper
-#         shaper calibration script to add an automatic damping ratio estimation to it
-
-
-# Be sure to make this script executable using SSH: type 'chmod +x ./graph_shaper.py' when in the folder!
-
-#####################################################################
-################ !!! DO NOT EDIT BELOW THIS LINE !!! ################
-#####################################################################
-
 import optparse, matplotlib, sys, importlib, os, math
 from textwrap import wrap
 import numpy as np
 import matplotlib.pyplot, matplotlib.dates, matplotlib.font_manager
 import matplotlib.ticker, matplotlib.gridspec
 import locale
-from datetime import datetime
+# from datetime import datetime
 
 matplotlib.use('Agg')
 
-MAX_TITLE_LENGTH=65
+MAX_TITLE_LENGTH=66
 PEAKS_DETECTION_THRESHOLD = 0.05
 PEAKS_EFFECT_THRESHOLD = 0.12
 SPECTROGRAM_LOW_PERCENTILE_FILTER = 5
@@ -45,7 +18,6 @@ MAX_SMOOTHING = 0.1
 COLORS = {
     "black":"#000000"
 }
-
 
 # Set the best locale for time and date formating (generation of the titles)
 try:
@@ -61,7 +33,6 @@ def print_with_c_locale(*args, **kwargs):
     original_print(*args, **kwargs)
     locale.setlocale(locale.LC_ALL, original_locale)
 print = print_with_c_locale
-
 
 ######################################################################
 # Computation
@@ -155,14 +126,15 @@ def detect_peaks(psd, freqs, window_size=5, vicinity=3):
     
     print("Peaks detected on the graph: %d @ %s Hz (%d above effect threshold)" % (num_peaks, ", ".join(map(str, peak_freqs)), num_peaks_above_effect_threshold))
 
-    return np.array(refined_peaks), num_peaks, num_peaks_above_effect_threshold
+    # return np.array(refined_peaks), num_peaks, num_peaks_above_effect_threshold
+    return np.array(refined_peaks)
 
 
 ######################################################################
 # Graphing
 ######################################################################
 
-def plot_freq_response_with_damping(ax, calibration_data, shapers, performance_shaper, fr, zeta, max_freq):
+def plot_freq_response_with_damping(ax, calibration_data, shapers, performance_shaper, fr, zeta, max_freq, accel_per_hz):
     freqs = calibration_data.freq_bins
     psd = calibration_data.psd_sum[freqs <= max_freq]
     px = calibration_data.psd_x[freqs <= max_freq]
@@ -175,7 +147,7 @@ def plot_freq_response_with_damping(ax, calibration_data, shapers, performance_s
 
     ax.set_xlabel('Frequency (Hz)')
     ax.set_xlim([0, max_freq])
-    ax.set_ylabel('Power spectral density')
+    ax.set_ylabel(f'Power spectral density')
     # ax.set_ylim([0, psd.max() + psd.max() * 0.05])
 
     ax.plot(freqs, psd, label='X+Y+Z', color='purple')
@@ -186,17 +158,18 @@ def plot_freq_response_with_damping(ax, calibration_data, shapers, performance_s
     ax.xaxis.set_minor_locator(matplotlib.ticker.MultipleLocator(5))
     ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
     ax.ticklabel_format(axis='y', style='scientific', scilimits=(0,0))
+    ax.text(0.05, 1.02, f'(accel per hz: {accel_per_hz})', transform=ax.transAxes, va='center', rotation=0)
     ax.grid(which='major', color='grey')
     ax.grid(which='minor', color='lightgrey')
 
     ax2 = ax.twinx()
     ax2.yaxis.set_visible(False)
-    
+
     lowvib_shaper_vibrs = float('inf')
     lowvib_shaper = None
     lowvib_shaper_freq = None
     lowvib_shaper_accel = 0
-    
+
     # Draw the shappers curves and add their specific parameters in the legend
     # This adds also a way to find the best shaper with a low level of vibrations (with a resonable level of smoothing)
     for shaper in shapers:
@@ -240,9 +213,10 @@ def plot_freq_response_with_damping(ax, calibration_data, shapers, performance_s
 
     # Draw the detected peaks and name them
     # This also draw the detection threshold and warning threshold (aka "effect zone")
-    peaks, _, _ = detect_peaks(psd, freqs)
-    peaks_warning_threshold = PEAKS_DETECTION_THRESHOLD * psd.max()
-    peaks_effect_threshold = PEAKS_EFFECT_THRESHOLD * psd.max()
+    # peaks, _, _ = detect_peaks(psd, freqs)
+    peaks = detect_peaks(psd, freqs)
+    # peaks_warning_threshold = PEAKS_DETECTION_THRESHOLD * psd.max()
+    # peaks_effect_threshold = PEAKS_EFFECT_THRESHOLD * psd.max()
 
     # ax.plot(freqs[peaks], psd[peaks], "x", color='black', markersize=8)
     # for idx, peak in enumerate(peaks):
@@ -263,22 +237,30 @@ def plot_freq_response_with_damping(ax, calibration_data, shapers, performance_s
 
     # Add the main resonant frequency and damping ratio of the axis to the graph title
     # ax.set_title("Axis Frequency Profile (ω0=%.1fHz, ζ=%.3f)" % (fr, zeta), fontsize=14, color=COLORS['dark_orange'], weight='bold')
+    # ndn = '/home/klipper/printer_data/config/blabla.txt'
+    # with open(ndn, 'w') as file:
+    #     for line in freqs:
+    #         file.write(str(line) + '\n')
 
-    ax.legend(loc='upper left', prop=fontP)
-    ax2.legend(loc='upper right', prop=fontP)
+    if max(freqs[peaks]) > 100:
+        ax.legend(loc='upper right', prop=fontP)
+        ax2.legend(loc='upper left', prop=fontP)
+    else:
+        ax.legend(loc='upper left', prop=fontP)
+        ax2.legend(loc='upper right', prop=fontP)
 
-    return freqs[peaks]
+    return freqs
 
 # Plot a time-frequency spectrogram to see how the system respond over time during the
 # resonnance test. This can highlight hidden spots from the standard PSD graph from other harmonics
 def plot_spectrogram(ax, data, peaks, max_freq):
-    pdata, bins, t = compute_spectrogram(data)
+    # pdata, bins, t = compute_spectrogram(data)
 
     # We need to normalize the data to get a proper signal on the spectrogram
     # However, while using "LogNorm" provide too much background noise, using
     # "Normalize" make only the resonnance appearing and hide interesting elements
     # So we need to filter out the lower part of the data (ie. find the proper vmin for LogNorm)
-    vmin_value = np.percentile(pdata, SPECTROGRAM_LOW_PERCENTILE_FILTER)
+    # vmin_value = np.percentile(pdata, SPECTROGRAM_LOW_PERCENTILE_FILTER)
 
     # ax.set_title("Time-Frequency Spectrogram", fontsize=14, color=COLORS['dark_orange'], weight='bold')
     # ax.pcolormesh(bins, t, pdata.T, norm=matplotlib.colors.LogNorm(vmin=vmin_value),
@@ -310,7 +292,7 @@ def parse_log(logname):
                 break
         if not header.startswith('freq,psd_x,psd_y,psd_z,psd_xyz'):
             # Raw accelerometer data
-            return np.loadtxt(logname, comments='#', delimiter=',')
+            return [np.loadtxt(logname, comments='#', delimiter=',')]
     # Power spectral density data or shaper calibration data
     raise ValueError("File %s does not contain raw accelerometer data and therefore "
                "is not supported by this script. Please use the official Klipper "
@@ -324,11 +306,12 @@ def setup_klipper_import(kdir):
     shaper_calibrate = importlib.import_module('.shaper_calibrate', 'extras')
 
 
-def shaper_calibration(lognames, klipperdir="~/klipper", max_smoothing=None, max_freq=200):
+def shaper_calibration(lognames, klipperdir, accel_per_hz, max_smoothing=None, max_freq=200):
     setup_klipper_import(klipperdir)
-
     # Parse data
-    datas = [parse_log(fn) for fn in lognames]
+    datas = parse_log(lognames)
+    # for i in datas:
+    #     print(i)
 
     # Calibrate shaper and generate outputs
     performance_shaper, shapers, calibration_data, fr, zeta = calibrate_shaper_with_damping(datas, max_smoothing)
@@ -336,18 +319,18 @@ def shaper_calibration(lognames, klipperdir="~/klipper", max_smoothing=None, max
     fig = matplotlib.pyplot.figure()
     ax1 = fig.add_subplot()
     # ax2 = fig.add_subplot(gs[1])
-    
+
     # Add title
     # title_line1 = "INPUT SHAPER CALIBRATION TOOL"
     # fig.text(0.12, 0.965, title_line1, ha='left', va='bottom', fontsize=20, color=COLORS['purple'], weight='bold')
 
-    title_line2 = "Frequency response and shapers (%s)" % (lognames[0])
+    title_line2 = f'Frequency response and shapers ({lognames})'
 
     ax1.set_title("\n".join(wrap(title_line2, MAX_TITLE_LENGTH)))
     # fig.text(0.12, 0.957, title_line2, ha='left', va='top', fontsize=10, color=COLORS['black'])
 
     # Plot the graphs
-    peaks = plot_freq_response_with_damping(ax1, calibration_data, shapers, performance_shaper, fr, zeta, max_freq)
+    peaks = plot_freq_response_with_damping(ax1, calibration_data, shapers, performance_shaper, fr, zeta, max_freq, accel_per_hz)
     # plot_spectrogram(ax2, datas[0], peaks, max_freq)
 
     fig.set_size_inches(8, 6)
@@ -368,8 +351,7 @@ def main():
     opts = optparse.OptionParser(usage)
     opts.add_option("-o", "--output", type="string", dest="output",
                     default=None, help="filename of output graph")
-    opts.add_option("-f", "--max_freq", type="float", default=200.
-                    ,
+    opts.add_option("-f", "--max_freq", type="float", default=200.,
                     help="maximum frequency to graph")
     opts.add_option("-s", "--max_smoothing", type="float", default=None,
                     help="maximum shaper smoothing to allow")
