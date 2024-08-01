@@ -242,7 +242,7 @@ def plot_freq_response_with_damping(ax, calibration_data, shapers, performance_s
     #     for line in freqs:
     #         file.write(str(line) + '\n')
 
-    if max(freqs[peaks]) > 100:
+    if fr > 100:
         ax.legend(loc='upper right', prop=fontP)
         ax2.legend(loc='upper left', prop=fontP)
     else:
