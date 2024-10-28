@@ -39,7 +39,7 @@ print = print_with_c_locale
 ######################################################################
 
 # Find the best shaper parameters using Klipper's official algorithm selection
-def calibrate_shaper_with_damping(datas, max_smoothing):
+def calibrate_shaper_with_damping(datas, damping_ratio, scv, max_smoothing):
     helper = shaper_calibrate.ShaperCalibrate(printer=None)
 
     calibration_data = helper.process_accelerometer_data(datas[0])
@@ -48,7 +48,8 @@ def calibrate_shaper_with_damping(datas, max_smoothing):
 
     calibration_data.normalize_to_frequencies()
 
-    shaper, all_shapers = helper.find_best_shaper(calibration_data, max_smoothing, print)
+    shaper, all_shapers = helper.find_best_shaper(calibration_data, damping_ratio=damping_ratio,
+                                                  scv=scv, max_smoothing=max_smoothing, logger=print)
 
     freqs = calibration_data.freq_bins
     psd = calibration_data.psd_sum
@@ -112,7 +113,7 @@ def detect_peaks(psd, freqs, window_size=5, vicinity=3):
     detection_threshold = PEAKS_DETECTION_THRESHOLD * psd.max()
     effect_threshold = PEAKS_EFFECT_THRESHOLD * psd.max()
     smoothed_peaks = smoothed_peaks[smoothed_psd[smoothed_peaks] > detection_threshold]
- 
+
     # Refine peak positions on the original curve
     refined_peaks = []
     for peak in smoothed_peaks:
@@ -123,7 +124,7 @@ def detect_peaks(psd, freqs, window_size=5, vicinity=3):
 
     num_peaks = len(refined_peaks)
     num_peaks_above_effect_threshold = np.sum(psd[refined_peaks] > effect_threshold)
-    
+
     print("Peaks detected on the graph: %d @ %s Hz (%d above effect threshold)" % (num_peaks, ", ".join(map(str, peak_freqs)), num_peaks_above_effect_threshold))
 
     # return np.array(refined_peaks), num_peaks, num_peaks_above_effect_threshold
@@ -178,13 +179,15 @@ def plot_freq_response_with_damping(ax, calibration_data, shapers, performance_s
                 shaper.name.upper(), shaper.freq,
                 shaper.vibrs * 100., shaper.smoothing,
                 shaper_max_accel)
-        ax2.plot(freqs, shaper.vals, label=label, linestyle='dotted')
 
         # Get the performance shaper
         if shaper.name == performance_shaper:
+            ax2.plot(freqs, shaper.vals, label=label, linestyle='dashdot')
             performance_shaper_freq = shaper.freq
             performance_shaper_vibr = shaper.vibrs * 100.
             performance_shaper_vals = shaper.vals
+        else:
+            ax2.plot(freqs, shaper.vals, label=label, linestyle='dotted')
 
         # Get the low vibration shaper
         if (shaper.vibrs * 100 < lowvib_shaper_vibrs or (shaper.vibrs * 100 == lowvib_shaper_vibrs and shaper_max_accel > lowvib_shaper_accel)) and shaper.smoothing < MAX_SMOOTHING:
@@ -214,7 +217,7 @@ def plot_freq_response_with_damping(ax, calibration_data, shapers, performance_s
     # Draw the detected peaks and name them
     # This also draw the detection threshold and warning threshold (aka "effect zone")
     # peaks, _, _ = detect_peaks(psd, freqs)
-    peaks = detect_peaks(psd, freqs)
+    # peaks = detect_peaks(psd, freqs)
     # peaks_warning_threshold = PEAKS_DETECTION_THRESHOLD * psd.max()
     # peaks_effect_threshold = PEAKS_EFFECT_THRESHOLD * psd.max()
 
@@ -241,8 +244,8 @@ def plot_freq_response_with_damping(ax, calibration_data, shapers, performance_s
     # with open(ndn, 'w') as file:
     #     for line in freqs:
     #         file.write(str(line) + '\n')
-
-    if fr > 100:
+    # if max(freqs[peaks]) > 100:
+    if fr > 90:
         ax.legend(loc='upper right', prop=fontP)
         ax2.legend(loc='upper left', prop=fontP)
     else:
@@ -306,7 +309,7 @@ def setup_klipper_import(kdir):
     shaper_calibrate = importlib.import_module('.shaper_calibrate', 'extras')
 
 
-def shaper_calibration(lognames, klipperdir, accel_per_hz, max_smoothing=None, max_freq=200):
+def shaper_calibration(lognames, klipperdir, accel_per_hz, damping_ratio=0.1, scv=5,  max_smoothing=None, max_freq=200):
     setup_klipper_import(klipperdir)
     # Parse data
     datas = parse_log(lognames)
@@ -314,7 +317,7 @@ def shaper_calibration(lognames, klipperdir, accel_per_hz, max_smoothing=None, m
     #     print(i)
 
     # Calibrate shaper and generate outputs
-    performance_shaper, shapers, calibration_data, fr, zeta = calibrate_shaper_with_damping(datas, max_smoothing)
+    performance_shaper, shapers, calibration_data, fr, zeta = calibrate_shaper_with_damping(datas, damping_ratio, scv, max_smoothing)
 
     fig = matplotlib.pyplot.figure()
     ax1 = fig.add_subplot()
@@ -370,4 +373,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    shaper_calibration(
+        'C:/Users/nikit/Desktop/PycharmProjects/Shaper_graphs/raw_piz.csv',
+        'C:/Users/nikit/Desktop/PycharmProjects/Shaper_graphs/klipper', 150)
